@@ -9,11 +9,15 @@
 #include "player_exception.h"
 
 class File {
-    std::string description;
+    const std::string file_description;
 public:
-    std::string getDescription() {
-        return this->description;
+    const std::string& getDescription() const {
+        return this->file_description;
     }
+
+    File(const std::string& description) :
+        file_description(description)
+    {}
 };
 
 class Playable {
@@ -70,8 +74,14 @@ public:
 };
 
 class ShuffleMode : public PlayMode {
+    int shuffle_seed;
+
 public:
     std::list<Playable> order_tracks(const std::list<Playable>& tracks) const override;
+
+    ShuffleMode(int seed) :
+        shuffle_seed(seed)
+    {}
 };
 
 class OddEvenMode : public PlayMode {
@@ -83,8 +93,8 @@ PlayMode createSequenceMode() {
     return SequenceMode();
 }
 
-PlayMode createShuffleMode() {
-    return ShuffleMode();
+PlayMode createShuffleMode(int seed) {
+    return ShuffleMode(seed);
 }
 
 PlayMode createOddEvenMode() {
