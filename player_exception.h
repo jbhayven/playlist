@@ -5,6 +5,8 @@
 
 class PlayerException : std::exception {
 protected:
+    // Nie jestem pewien, czy to powinno być statyczne; może lepiej inicjalizować
+    // dla każdego obiektu osobno?
     static const char* message;
 public:
     // to lepiej pasuje do przykładu
@@ -14,7 +16,6 @@ public:
 };
 
 class LoopingPlaylistsException : PlayerException {
-public:
     inline static const char* message = "adding failed: a loop would be created";
 };
 
