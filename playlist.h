@@ -8,6 +8,7 @@
 #include <unordered_set>
 #include "player_exception.h"
 #include "player_mode.h"
+#include "playable.h"
 
 class File {
     const std::string file_description;

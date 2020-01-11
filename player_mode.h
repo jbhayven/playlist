@@ -2,11 +2,9 @@
 #define PLAYLIST_PLAYERMODE_H
 
 #include <list>
+#include "playable.h"
 
-class Playable {
-public:
-    virtual void play() const;
-};
+
 
 // Jednak koncepcja jest taka, że PlayMode nie powinien znać sposobu przechowywania
 // danych przez playlistę – to jej odpowiedzialnością będzie przetłumaczenie go
