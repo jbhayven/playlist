@@ -61,12 +61,12 @@ public:
 // Ale bazowa nie może być jednocześnie statyczna i wirtualna...
 class PlayMode {
 public:
-    virtual std::list<Playable> order_tracks(const std::list<Playable>& tracks) const;
+    virtual std::list<Playable> orderTracks(const std::list<Playable>& tracks) const;
 };
 
 class SequenceMode : public PlayMode {
 public:
-    std::list<Playable> order_tracks(
+    std::list<Playable> orderTracks(
         const std::list<Playable>& tracks) const override {
 
         return tracks;
@@ -77,7 +77,7 @@ class ShuffleMode : public PlayMode {
     int shuffle_seed;
 
 public:
-    std::list<Playable> order_tracks(const std::list<Playable>& tracks) const override;
+    std::list<Playable> orderTracks(const std::list<Playable>& tracks) const override;
 
     ShuffleMode(int seed) :
         shuffle_seed(seed)
@@ -86,7 +86,7 @@ public:
 
 class OddEvenMode : public PlayMode {
 public:
-    std::list<Playable> order_tracks(const std::list<Playable>& tracks) const override;
+    std::list<Playable> orderTracks(const std::list<Playable>& tracks) const override;
 };
 
 PlayMode createSequenceMode() {
