@@ -7,6 +7,7 @@
 #include <memory>
 #include <unordered_set>
 #include "player_exception.h"
+#include "player_mode.h"
 
 class File {
     const std::string file_description;
@@ -16,14 +17,10 @@ public:
     }
 
     File(const std::string& description) :
-        file_description(description)
+            file_description(description)
     {}
 };
 
-class Playable {
-public:
-    virtual void play() const;
-};
 
 class Piece : Playable { };
 
@@ -53,55 +50,7 @@ public:
 };
 //
 
-// Jednak koncepcja jest taka, że PlayMode nie powinien znać sposobu przechowywania
-// danych przez playlistę – to jej odpowiedzialnością będzie przetłumaczenie go
-// na std::list<Playable>, które jest typem znanym przez PlayMode.
-// Może PlayMode wypadałoby wyrzucić do osobnego pliku nagłówkowego?
-// Nie jestem też pewien sygnatur funkcji order_tracks; może powinny być statyczne?
-// Ale bazowa nie może być jednocześnie statyczna i wirtualna...
-class PlayMode {
-public:
-    virtual std::list<Playable> orderTracks(const std::list<Playable>& tracks) const;
-};
-
-class SequenceMode : public PlayMode {
-public:
-    std::list<Playable> orderTracks(
-        const std::list<Playable>& tracks) const override {
-
-        return tracks;
-    }
-};
-
-class ShuffleMode : public PlayMode {
-    int shuffle_seed;
-
-public:
-    std::list<Playable> orderTracks(const std::list<Playable>& tracks) const override;
-
-    ShuffleMode(int seed) :
-        shuffle_seed(seed)
-    {}
-};
-
-class OddEvenMode : public PlayMode {
-public:
-    std::list<Playable> orderTracks(const std::list<Playable>& tracks) const override;
-};
-
-PlayMode createSequenceMode() {
-    return SequenceMode();
-}
-
-PlayMode createShuffleMode(int seed) {
-    return ShuffleMode(seed);
-}
-
-PlayMode createOddEvenMode() {
-    return OddEvenMode();
-}
-
-class Playlist : Playable {
+class playlist : Playable {
     // Tutaj nie jestem pewien, czy robić to tutaj przez using, czy może
     // przez jakąś zewnętrzną klasę.
     using tracklist_t = std::list<Playable>;
@@ -120,7 +69,7 @@ class Playlist : Playable {
     // ale znowu – druga opcja jest czasochłonna. Z drugiej strony, możliwe byłoby
     // jako takie utrzymywanie struktury i w miarę szybkie sprawdzanie na obecność cykli.
     std::shared_ptr<tracklist_t> tracks;
-    std::shared_ptr< std::unordered_set<Playlist> > child_playlists;
+    std::shared_ptr< std::unordered_set<playlist> > child_playlists;
     PlayMode mode;
 
 public:
@@ -131,35 +80,35 @@ public:
     void setMode(PlayMode mode);
     void play() const override;
 
-    Playlist() :
-        tracks(std::make_shared<tracklist_t>()),
-        child_playlists(std::make_shared< std::unordered_set<Playlist> >()),
-        mode(createSequenceMode())
+    playlist() :
+            tracks(std::make_shared<tracklist_t>()),
+            child_playlists(std::make_shared< std::unordered_set<playlist> >()),
+            mode(createSequenceMode())
     {}
 
-    Playlist(const Playlist& other) :
-        tracks(other.tracks),
-        child_playlists(other.child_playlists),
-        mode(other.mode)
+    playlist(const playlist& other) :
+            tracks(other.tracks),
+            child_playlists(other.child_playlists),
+            mode(other.mode)
     {}
 
-    Playlist(Playlist&& other) :
-        tracks(other.tracks),
-        child_playlists(other.child_playlists),
-        mode(other.mode)
+    playlist(playlist&& other) :
+            tracks(other.tracks),
+            child_playlists(other.child_playlists),
+            mode(other.mode)
     {
         other.tracks = std::make_shared< tracklist_t >();
-        other.child_playlists = std::make_shared< std::unordered_set<Playlist> >();
+        other.child_playlists = std::make_shared< std::unordered_set<playlist> >();
         other.mode = createSequenceMode();
     }
 };
 
 class Player {
-    std::list<Playlist> playlists; // do czego nam to właściwie potrzebne?
-        // Czy może chodzi o to, żeby playlisty nie znikały?
-        // Ale skoro zwracamy całe obiekty, to i tak chyba nie mamy nad tym kontroli?
+    std::list<playlist> playlists; // do czego nam to właściwie potrzebne?
+    // Czy może chodzi o to, żeby playlisty nie znikały?
+    // Ale skoro zwracamy całe obiekty, to i tak chyba nie mamy nad tym kontroli?
 public:
     virtual Piece openFile(const File& file) const;
-    virtual Playlist createPlaylist(const std::string& name) const;
+    virtual playlist createPlaylist(const std::string& name) const;
 };
 #endif
