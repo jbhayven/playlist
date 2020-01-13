@@ -27,11 +27,8 @@ public:
 
 class Piece : Playable { };
 
-// Może zamiast std::string użylibyśmy std::shared_ptr<std::string> na potrzeby
-// kopiowania, z naszymi własnymi konstruktorami kopiującymi, bo kopii pewnie będzie dużo,
-// a Song i Movie nigdy nie zmieniają swoich właściwości?
-// Może contents wyrzucilibyśmy do klasy Piece i tam wrzucili częściową
-// implementację play()?
+// Nie potrzebujemy konstruktorów kopiujących, bo będą zwracane tylko
+// wskaźniki na te obiekty; nie ma co się martwić polami.
 class Song : Piece {
     const std::string performer;
     const std::string title;
@@ -138,7 +135,7 @@ public:
 
 class Player {
 public:
-    virtual std::shared_ptr<Piece> openFile(const File& file) const;
+    std::shared_ptr<Piece> openFile(const File& file) const {}; // TODO
 
     std::shared_ptr<Playlist> createPlaylist(const std::string& name) const {
         return std::make_shared<Playlist>(name);
