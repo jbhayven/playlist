@@ -4,35 +4,38 @@
 #include <exception>
 
 class PlayerException : public std::exception {
-protected:
-    // Nie jestem pewien, czy to powinno być statyczne; może lepiej inicjalizować
-    // dla każdego obiektu osobno?
-    static const char* message;
 public:
-    // to lepiej pasuje do przykładu
-    const char* what() const noexcept override {
-        return message;
-    }
+    virtual const char* what() const noexcept override = 0;
 };
 
 class LoopingPlaylistsException : public PlayerException {
-    inline static const char* message = "adding failed: a loop would be created";
+    const char* what() const noexcept override { 
+        return "adding failed: a loop would be created";
+    }
 };
 
 class OutOfBoundsException : public PlayerException {
-    inline static const char* message = "position out of bounds";
+    const char* what() const noexcept override { 
+        return "position out of bounds";
+    }
 };
 
 class CorruptFileException : public PlayerException {
-    inline static const char* message = "corrupt file";
+    const char* what() const noexcept override { 
+        return "corrupt file";
+    }
 };
 
 class CorruptContentException : public PlayerException {
-    inline static const char* message = "corrupt content";
+    const char* what() const noexcept override { 
+        return "corrupt content";
+    }
 };
 
 class UnsupportedTypeException : public PlayerException {
-    inline static const char* message = "unsupported type";
+    const char* what() const noexcept override { 
+        return "unsupported type";
+    }
 };
 
 #endif
