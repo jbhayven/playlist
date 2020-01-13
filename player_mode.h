@@ -11,7 +11,7 @@ class PlayMode {
 protected:
     using collection_t = std::vector< std::shared_ptr<Playable> >;
 public:
-    virtual collection_t orderTracks(const collection_t& tracks) const;
+    virtual collection_t orderTracks(const collection_t& tracks) const = 0;
 };
 
 class SequenceMode : public PlayMode {
