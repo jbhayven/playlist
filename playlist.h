@@ -133,11 +133,7 @@ public:
         tracklist(std::move(other.tracklist)),
         mode(std::move(other.mode)),
         name(std::move(other.name))
-    {
-        other.tracklist = std::make_shared<collection_t>();
-        other.mode = std::make_shared<playmode_t>(createSequenceMode());
-        other.name = std::make_shared<std::string>();
-    }
+    {}
 };
 
 class Player {
