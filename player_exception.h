@@ -3,7 +3,7 @@
 
 #include <exception>
 
-class player_exception : std::exception {
+class PlayerException : public std::exception {
 protected:
     // Nie jestem pewien, czy to powinno być statyczne; może lepiej inicjalizować
     // dla każdego obiektu osobno?
@@ -15,19 +15,23 @@ public:
     }
 };
 
-class LoopingPlaylistsException : player_exception {
+class LoopingPlaylistsException : public PlayerException {
     inline static const char* message = "adding failed: a loop would be created";
 };
 
-class CorruptFileException : player_exception {
+class OutOfBoundsException : public PlayerException {
+    inline static const char* message = "position out of bounds";
+};
+
+class CorruptFileException : public PlayerException {
     inline static const char* message = "corrupt file";
 };
 
-class CorruptContentException : player_exception {
+class CorruptContentException : public PlayerException {
     inline static const char* message = "corrupt content";
 };
 
-class UnsupportedTypeException : player_exception {
+class UnsupportedTypeException : public PlayerException {
     inline static const char* message = "unsupported type";
 };
 

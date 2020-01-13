@@ -1,58 +1,68 @@
 #ifndef PLAYLIST_PLAYERMODE_H
 #define PLAYLIST_PLAYERMODE_H
 
-#include <list>
+#include <algorithm>
+#include <random>
+#include <vector>
+#include <memory>
 #include "playable.h"
 
-
-
-// Jednak koncepcja jest taka, że PlayMode nie powinien znać sposobu przechowywania
-// danych przez playlistę – to jej odpowiedzialnością będzie przetłumaczenie go
-// na std::list<Playable>, które jest typem znanym przez PlayMode.
-// Może PlayMode wypadałoby wyrzucić do osobnego pliku nagłówkowego?
-// Nie jestem też pewien sygnatur funkcji orderTracks; może powinny być statyczne?
-// Ale bazowa nie może być jednocześnie statyczna i wirtualna...
 class PlayMode {
+protected:
+    using collection_t = std::vector< std::shared_ptr<Playable> >;
 public:
-    virtual std::list<Playable> orderTracks(const std::list<Playable>& tracks) const;
+    virtual collection_t orderTracks(const collection_t& tracks) const;
 };
 
 class SequenceMode : public PlayMode {
 public:
-    std::list<Playable> orderTracks(
-            const std::list<Playable>& tracks) const override {
-
-        return tracks;
+    collection_t orderTracks(const collection_t& tracks) const override {
+        return collection_t(tracks);
     }
 };
 
 class ShuffleMode : public PlayMode {
-    int shuffle_seed;
+    std::default_random_engine random_engine;
 
 public:
-    std::list<Playable> orderTracks(const std::list<Playable>& tracks) const override;
+    collection_t orderTracks(const collection_t& tracks) const override {
+        collection_t result(tracks);
 
-    ShuffleMode(int seed) :
-            shuffle_seed(seed)
+        std::shuffle(result.begin(), result.end(), random_engine);
+
+        return result;
+    }
+
+    ShuffleMode(unsigned seed) :
+        random_engine(seed)
     {}
 };
 
 class OddEvenMode : public PlayMode {
 public:
-    std::list<Playable> orderTracks(const std::list<Playable>& tracks) const override;
+    collection_t orderTracks(const collection_t& tracks) const override {
+        collection_t result;
+
+        for(size_t i = 1; i < tracks.size(); i+=2)
+            result.push_back(tracks.at(i));
+
+        for(size_t i = 0; i < tracks.size(); i+=2)
+            result.push_back(tracks.at(i));
+
+        return result;
+    }
 };
 
 PlayMode createSequenceMode() {
     return SequenceMode();
 }
 
-PlayMode createShuffleMode(int seed) {
+PlayMode createShuffleMode(unsigned seed) {
     return ShuffleMode(seed);
 }
 
 PlayMode createOddEvenMode() {
     return OddEvenMode();
 }
-
 
 #endif

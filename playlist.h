@@ -1,11 +1,13 @@
 #ifndef _PLAYLIST_H
 #define _PLAYLIST_H
 
-#include <list>
+#include <iostream>
+#include <vector>
 #include <string>
 #include <cstddef>
 #include <memory>
 #include <unordered_set>
+#include <utility>
 #include "player_exception.h"
 #include "player_mode.h"
 #include "playable.h"
@@ -51,65 +53,99 @@ public:
 };
 //
 
-class playlist : Playable {
-    // Tutaj nie jestem pewien, czy robić to tutaj przez using, czy może
-    // przez jakąś zewnętrzną klasę.
-    using tracklist_t = std::list<Playable>;
+class Playlist : Playable {
+    using elem_t = std::shared_ptr<Playable>;
+    using playmode_t = PlayMode;
+    using collection_t = std::vector<elem_t>;
 
-    // Szczerze mówiąc, nie jestem pewien, jak patrzeć na tutejszą sytuację
-    // – bo czy kopia listy jest tą samą listą? Jak należy reagować na zmiany
-    // w kopiach? Czy kopie współdzielą zmiany?
+    std::shared_ptr<collection_t> tracklist;
+    std::shared_ptr<playmode_t> mode;
+    std::shared_ptr<std::string> name;
 
-    // Jeśli tak, to shared_ptr jest najlepszą opcją, ale wtedy sprawdzanie
-    // na obecność cykli trzeba by wykonywać przy każdym dodawaniu bo trudno byłoby
-    // na bieżąco utrzymywać dla każdej playlisty zbiór wszystkich wyższych
-    // leksykograficznie list.
-    // No, albo to, albo jakieś dzikie algosy, których nie znam xD
+    size_t size() {
+        return tracklist->size();
+    }
 
-    // Jeśli nie, to można pomyśleć o copy-on-write albo po prostu chamsko kopiować,
-    // ale znowu – druga opcja jest czasochłonna. Z drugiej strony, możliwe byłoby
-    // jako takie utrzymywanie struktury i w miarę szybkie sprawdzanie na obecność cykli.
-    std::shared_ptr<tracklist_t> tracks;
-    std::shared_ptr< std::unordered_set<playlist> > child_playlists;
-    PlayMode mode;
+    bool reachable(Playlist* p, Playlist* checked) {
+        if(p == checked) return true;
+
+        for(auto elem : *p->tracklist)
+            if(reachable(elem.get(), checked))
+                return true;
+
+        return false;
+    }
+
+    bool reachable([[maybe_unused]] Playable* p, [[maybe_unused]] Playlist* checked) {
+        return false;
+    }
 
 public:
-    void add(Playable element);
-    void add(Playable element, size_t position);
-    void remove();
-    void remove(size_t position);
-    void setMode(PlayMode mode);
-    void play() const override;
+    void add(elem_t element) {
+        if(reachable(element.get(), this)) throw LoopingPlaylistsException();
 
-    playlist() :
-            tracks(std::make_shared<tracklist_t>()),
-            child_playlists(std::make_shared< std::unordered_set<playlist> >()),
-            mode(createSequenceMode())
+        tracklist->push_back(element);
+    }
+
+    void add(elem_t element, size_t position) {
+        if(position > size()) throw OutOfBoundsException();
+        if(reachable(element.get(), this)) throw LoopingPlaylistsException();
+
+        tracklist->insert(tracklist->begin() + position, element);
+    }
+
+    void remove() {
+        tracklist->pop_back();
+    }
+
+    void remove(size_t position) {
+        if(position >= size()) throw OutOfBoundsException();
+
+        tracklist->erase(tracklist->begin() + position);
+    }
+
+    void setMode(PlayMode mode) {
+        *this->mode = mode;
+    }
+
+    void play() const override {
+        std::cout << "Playlist [" << name << "]" << std::endl;
+
+        collection_t ordered_tracks = mode->orderTracks(*tracklist);
+
+        for(auto element : ordered_tracks)
+            element->play();
+    }
+
+    Playlist(const std::string& name) :
+        tracklist(std::make_shared<collection_t>()),
+        mode(std::make_shared<playmode_t>(createSequenceMode())),
+        name(std::make_shared<std::string>(name))
     {}
 
-    playlist(const playlist& other) :
-            tracks(other.tracks),
-            child_playlists(other.child_playlists),
-            mode(other.mode)
+    Playlist(const Playlist& other) :
+        tracklist(other.tracklist),
+        mode(other.mode),
+        name(other.name)
     {}
 
-    playlist(playlist&& other) :
-            tracks(other.tracks),
-            child_playlists(other.child_playlists),
-            mode(other.mode)
+    Playlist(Playlist&& other) :
+        tracklist(std::move(other.tracklist)),
+        mode(std::move(other.mode)),
+        name(std::move(other.name))
     {
-        other.tracks = std::make_shared< tracklist_t >();
-        other.child_playlists = std::make_shared< std::unordered_set<playlist> >();
-        other.mode = createSequenceMode();
+        other.tracklist = std::make_shared<collection_t>();
+        other.mode = std::make_shared<playmode_t>(createSequenceMode());
+        other.name = std::make_shared<std::string>();
     }
 };
 
 class Player {
-    std::list<playlist> playlists; // do czego nam to właściwie potrzebne?
-    // Czy może chodzi o to, żeby playlisty nie znikały?
-    // Ale skoro zwracamy całe obiekty, to i tak chyba nie mamy nad tym kontroli?
 public:
-    virtual Piece openFile(const File& file) const;
-    virtual playlist createPlaylist(const std::string& name) const;
+    virtual std::shared_ptr<Piece> openFile(const File& file) const;
+
+    std::shared_ptr<Playlist> createPlaylist(const std::string& name) const {
+        return std::make_shared<Playlist>(name);
+    }
 };
 #endif
