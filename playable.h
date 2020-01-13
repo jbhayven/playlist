@@ -5,7 +5,7 @@ class Playable {
 public:
     virtual void play() const = 0;
     
-    virtual ~Playable() = 0;
+    virtual ~Playable();
 };
 
 #endif
