@@ -126,7 +126,7 @@ public:
     }
 
     void play() const override {
-        std::cout << "Playlist [" << name << "]" << std::endl;
+        std::cout << "Playlist [" << *name << "]" << std::endl;
 
         collection_t ordered_tracks = mode->orderTracks(*tracklist);
 
@@ -188,6 +188,30 @@ private:
         return false;
     }
 
+    std::string decipher(const std::string& line) {
+
+        char answer[ line.size() + 1];
+        int help;
+
+        for (size_t i = 0; i < line.size(); i++) {
+            if (line[i] >= 'a' && line[i] <= 'z') {
+                help = line[i] - 'a';
+                help = (help + 13) % 26 + 'a';
+                answer[i] = (char)help; //TODO wrong type of cast
+            }
+            else if (line[i] >= 'A' && line[i] <= 'Z') {
+                help = line[i] - 'A';
+                help = (help + 13) % 26 + 'A';
+                answer[i] = (char)help; //TODO wrong type of cast
+            }
+            else {
+                answer[i] = line[i];
+            }
+        }
+
+        answer[line.size()] = '\0';
+        return answer;
+    }
 
 public:
 
@@ -197,7 +221,7 @@ public:
         std::vector <std::string> data;
         boost::algorithm::split(data, str, boost::is_any_of("|"));
 
-        assert(data.size() >= 4);
+        //assert(data.size() >= 4);
         bool found_artist = false, found_title = false, found_year = false;
         std::string artist, title, year, contents;
         std::string type = data[0];
@@ -238,6 +262,7 @@ public:
             return std::make_shared<Song>(artist, title, contents);
         }
         else if (type == "video" && found_year && found_title) {
+            contents = std::move(decipher(contents));
             return std::make_shared<Movie>(title, year, contents);
         }
         else {
