@@ -4,8 +4,8 @@
 class Playable {
 public:
     virtual void play() const = 0;
-    
-    virtual ~Playable();
+
+    virtual ~Playable() = default;
 };
 
 #endif

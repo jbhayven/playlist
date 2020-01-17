@@ -12,7 +12,7 @@ protected:
     using collection_t = std::vector< std::shared_ptr<Playable> >;
 public:
     virtual collection_t orderTracks(const collection_t& tracks) const = 0;
-    virtual ~PlayMode();
+    virtual ~PlayMode() = default;
 };
 
 class SequenceMode : public PlayMode {
@@ -29,13 +29,13 @@ public:
     collection_t orderTracks(const collection_t& tracks) const override {
         collection_t result(tracks);
 
-        std::shuffle(result.begin(), result.end(), random_engine);
+        //std::shuffle(result.begin(), result.end(), random_engine);
 
         return result;
     }
 
     ShuffleMode(unsigned seed) :
-        random_engine(seed)
+            random_engine(seed)
     {}
 };
 
@@ -54,16 +54,17 @@ public:
     }
 };
 
-PlayMode createSequenceMode() {
-    return SequenceMode();
+
+std::shared_ptr<PlayMode> createSequenceMode() {
+    return std::make_shared<SequenceMode>();
 }
 
-PlayMode createShuffleMode(unsigned seed) {
-    return ShuffleMode(seed);
+std::shared_ptr<PlayMode> createShuffleMode(unsigned seed) {
+    return std::make_shared<ShuffleMode>(seed);
 }
 
-PlayMode createOddEvenMode() {
-    return OddEvenMode();
+std::shared_ptr<PlayMode> createOddEvenMode() {
+    return std::make_shared<OddEvenMode>();
 }
 
 #endif

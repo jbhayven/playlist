@@ -8,6 +8,8 @@
 #include <memory>
 #include <unordered_set>
 #include <utility>
+#include <assert.h>
+#include <boost/algorithm/string.hpp>
 #include "player_exception.h"
 #include "player_mode.h"
 #include "playable.h"
@@ -25,32 +27,50 @@ public:
 };
 
 
-class Piece : Playable { };
+class Piece : public Playable { };
 
 // Nie potrzebujemy konstruktorów kopiujących, bo będą zwracane tylko
 // wskaźniki na te obiekty; nie ma co się martwić polami.
-class Song : Piece {
-    const std::string performer;
+class Song : public Piece {
+    const std::string artist;
     const std::string title;
-
     const std::string contents;
 
 public:
-    void play() const override;
+    void play() const override {
+        std::cout << "Song [" << artist << ", " << title << "]: ";
+        std::cout << contents << "\n";
+    };
+
+    Song(std::string artist, std::string title, std::string contents)
+    : artist(std::move(artist))
+    , title(std::move(title))
+    , contents(std::move(contents))
+    {}
 };
 
-class Movie : Piece {
+class Movie : public Piece {
     const std::string title;
     const std::string year;
-
     const std::string contents;
+    /*
+     * TODO ROT13 dla contents w Movie
+     */
 
 public:
-    void play() const override;
-};
-//
+    void play() const override {
+        std::cout << "Movie [" << title << ", " << year << "]: ";
+        std::cout << contents << "\n";
+    };
 
-class Playlist : Playable {
+    Movie(std::string title, std::string year, std::string contents)
+    : title(std::move(title))
+    , year(std::move(year))
+    , contents(std::move(contents))
+    {}
+};
+
+class Playlist : public Playable {
     using elem_t = std::shared_ptr<Playable>;
     using playmode_t = PlayMode;
     using collection_t = std::vector<elem_t>;
@@ -101,8 +121,8 @@ public:
         tracklist->erase(tracklist->begin() + position);
     }
 
-    void setMode(PlayMode mode) {
-        *this->mode = mode;
+    void setMode(const std::shared_ptr<PlayMode>& mode) {
+        this->mode = mode;
     }
 
     void play() const override {
@@ -114,28 +134,117 @@ public:
             element->play();
     }
 
+/*
+ * TODO nazwa playlisty się jakoś źle zapisuje
+ */
     Playlist(const std::string& name) :
-        tracklist(std::make_shared<collection_t>()),
-        mode(std::make_shared<playmode_t>(createSequenceMode())),
-        name(std::make_shared<std::string>(name))
+            tracklist(std::make_shared<collection_t>()),
+            mode(createSequenceMode()),
+            name(std::make_shared<std::string>(name))
     {}
 
     Playlist(const Playlist& other) :
-        tracklist(other.tracklist),
-        mode(other.mode),
-        name(other.name)
+            tracklist(other.tracklist),
+            mode(other.mode),
+            name(other.name)
     {}
 
     Playlist(Playlist&& other) :
-        tracklist(std::move(other.tracklist)),
-        mode(std::move(other.mode)),
-        name(std::move(other.name))
+            tracklist(std::move(other.tracklist)),
+            mode(std::move(other.mode)),
+            name(std::move(other.name))
     {}
 };
 
+
+/*TODO When you choose to manage the memory yourself you should follow the so-called
+ * Rule of Three.
+ * This rule states that if your class defines one or more of the following
+ * methods it should probably explicitly define all three:
+ * destructor;
+ * copy constructor;
+ * copy assignment operator.
+ */
+
 class Player {
+private:
+
+    bool begEqual(const std::string& str, const std::string& origin) {
+        if (str.size() < origin.size())
+            return false;
+
+        for (size_t i = 0; i < origin.size(); i++) {
+            if (str[i] != origin[i])
+                return false;
+        }
+        return true;
+    }
+
+    bool findColon(const std::string& line) {
+        for (char c : line) {
+            if (c == ':')
+                return true;
+        }
+        return false;
+    }
+
+
 public:
-    std::shared_ptr<Piece> openFile(const File& file) const {}; // TODO
+
+    std::shared_ptr<Piece> openFile(const File& file) {
+
+        std::string str = file.getDescription();
+        std::vector <std::string> data;
+        boost::algorithm::split(data, str, boost::is_any_of("|"));
+
+        assert(data.size() >= 4);
+        bool found_artist = false, found_title = false, found_year = false;
+        std::string artist, title, year, contents;
+        std::string type = data[0];
+
+        for (size_t i = 1; i < data.size(); i++) {
+            if (begEqual(data[i], "artist:")) {
+                artist = data[i].substr(7, data[i].size() - 7);
+                if (found_artist) {
+                    //TODO exception
+                }
+                found_artist = true;
+            }
+            else if (begEqual(data[i], "title:")) {
+                title = data[i].substr(6, data[i].size() - 6);
+                if (found_title) {
+                    //TODO exception
+                }
+                found_title = true;
+            }
+            else if (begEqual(data[i], "year:")) {
+                year = data[i].substr(5, data[i].size() - 5);
+                if (found_year) {
+                    //TODO exception
+                }
+                found_year = true;
+            }
+            else if (i == data.size() - 1) {
+                contents = data[i];
+            }
+            else {
+                if (!findColon(data[i])) {
+                    //TODO exception
+                }
+            }
+        }
+
+        if (type == "audio" && found_artist && found_title) {
+            return std::make_shared<Song>(artist, title, contents);
+        }
+        else if (type == "video" && found_year && found_title) {
+            return std::make_shared<Movie>(title, year, contents);
+        }
+        else {
+            //TODO exception
+            return nullptr;
+        }
+    };
 
     std::shared_ptr<Playlist> createPlaylist(const std::string& name) const {
         return std::make_shared<Playlist>(name);
