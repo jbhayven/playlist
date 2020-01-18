@@ -65,86 +65,90 @@ public:
     {}
 };
 
+/*
+ * Być może warto część interfejsu przenieść do nadrzędnej klasy "Composite"
+ */
 class Playlist : public Playable {
-    using elem_t = std::shared_ptr<Playable>;
-    using playmode_t = PlayMode;
-    using collection_t = std::vector<elem_t>;
+    using playable_t = std::shared_ptr<Playable>;
+    using playlist_t = std::shared_ptr<Playlist>;
+    using playmode_t = std::shared_ptr<PlayMode>;
 
-    std::shared_ptr<collection_t> tracklist;
-    std::shared_ptr<playmode_t> mode;
-    std::shared_ptr<std::string> name;
+    std::vector<playable_t> tracklist;
+    std::vector<Playlist*> child_playlists;
+    playmode_t mode;
+    std::string name;
 
     size_t size() {
-        return tracklist->size();
+        return tracklist.size();
     }
 
-    bool reachable(Playlist* p, Playlist* checked) {
-        if(p == checked) return true;
+    bool reachable(Playlist* looked_up) {
+        std::cout << "Lookup: " << this->name << " " << looked_up->name << std::endl;
+        if(this == looked_up) return true;
 
-        for(auto elem : *p->tracklist)
-            if(reachable(elem.get(), checked))
+        for(auto elem : child_playlists)
+            if(elem->reachable(looked_up))
                 return true;
 
         return false;
     }
 
-    bool reachable([[maybe_unused]] Playable* p, [[maybe_unused]] Playlist* checked) {
-        return false;
-    }
-
 public:
-    void add(elem_t element) {
-        if(reachable(element.get(), this)) throw LoopingPlaylistsException();
+    void add(playable_t playable, size_t position) {
+        if(position > size()) throw OutOfBoundsException();
 
-        tracklist->push_back(element);
+        tracklist.insert(tracklist.begin() + position, playable);
     }
 
-    void add(elem_t element, size_t position) {
-        if(position > size()) throw OutOfBoundsException();
-        if(reachable(element.get(), this)) throw LoopingPlaylistsException();
+    void add(playable_t playable) {
+        add(playable, size());
+    }
 
-        tracklist->insert(tracklist->begin() + position, element);
+    void add(playlist_t playlist, size_t position) {
+        if(playlist->reachable(this)) throw LoopingPlaylistsException();
+
+        add(playable_t(playlist), position);
+        child_playlists.push_back(playlist.get());
+    }
+
+    void add(playlist_t playlist) {
+        add(playlist, size());
     }
 
     void remove() {
-        tracklist->pop_back();
+        if(size() == 0) throw OutOfBoundsException();
+
+        remove(size() - 1);
     }
 
     void remove(size_t position) {
         if(position >= size()) throw OutOfBoundsException();
 
-        tracklist->erase(tracklist->begin() + position);
+        auto it = find(child_playlists.begin(), child_playlists.end(),
+                       tracklist[position].get());
+
+        tracklist.erase(tracklist.begin() + position);
+        if(it != child_playlists.end()) child_playlists.erase(it);
     }
 
-    void setMode(const std::shared_ptr<PlayMode>& mode) {
+    void setMode(const playmode_t& mode) {
         this->mode = mode;
     }
 
     void play() const override {
-        std::cout << "Playlist [" << *name << "]" << std::endl;
+        std::cout << "Playlist [" << name << "]" << std::endl;
 
-        collection_t ordered_tracks = mode->orderTracks(*tracklist);
+        std::vector<playable_t> ordered_tracks = mode->orderTracks(tracklist);
 
         for(auto element : ordered_tracks)
             element->play();
     }
 
     Playlist(const std::string& name) :
-            tracklist(std::make_shared<collection_t>()),
-            mode(createSequenceMode()),
-            name(std::make_shared<std::string>(name))
-    {}
-
-    Playlist(const Playlist& other) :
-            tracklist(other.tracklist),
-            mode(other.mode),
-            name(other.name)
-    {}
-
-    Playlist(Playlist&& other) :
-            tracklist(std::move(other.tracklist)),
-            mode(std::move(other.mode)),
-            name(std::move(other.name))
+        tracklist(),
+        child_playlists(),
+        mode(createSequenceMode()),
+        name(name)
     {}
 };
 
