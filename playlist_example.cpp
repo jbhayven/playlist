@@ -12,9 +12,9 @@ int main() {
                                                    "Hello, Dolly! This is Louis, Dolly"));
     armstrong->add(whatAWonderfulWorld);
     armstrong->add(helloDolly);
-    auto direstraits = player.openFile(File("audio|artist:Dire Straits|title:Money for Nothing|"
+    auto direstraits = player.openFile(File("audio|artist:Dire Straits|title:Money for Nothing|year:1717|"
                                                     "Now look at them yo-yo's that's the way you do it..."));
-    auto cabaret = player.openFile(File("video|title:Cabaret|year:1972|Qvfcynlvat Pnonerg"));
+    auto cabaret = player.openFile(File("video|title:Cabaret|year:9876|year:1972|Qvfcynlvat Pnonerg"));
 
 
     mishmash->add(cabaret);
