@@ -11,37 +11,37 @@ class PlayMode {
 protected:
     using collection_t = std::vector< std::shared_ptr<Playable> >;
 public:
-    virtual collection_t orderTracks(const collection_t& tracks) const = 0;
+    virtual collection_t orderTracks(const collection_t& tracks) = 0;
     virtual ~PlayMode() = default;
 };
 
 class SequenceMode : public PlayMode {
 public:
-    collection_t orderTracks(const collection_t& tracks) const override {
+    collection_t orderTracks(const collection_t& tracks) override {
         return collection_t(tracks);
     }
 };
 
 class ShuffleMode : public PlayMode {
-    std::default_random_engine random_engine;
+    std::default_random_engine engine;
 
 public:
-    collection_t orderTracks(const collection_t& tracks) const override {
+    collection_t orderTracks(const collection_t& tracks) override {
         collection_t result(tracks);
 
-        std::shuffle(result.begin(), result.end(), random_engine);
+        std::shuffle(result.begin(), result.end(), engine);
 
         return result;
     }
 
     ShuffleMode(unsigned seed) :
-            random_engine(seed)
+        engine(seed)
     {}
 };
 
 class OddEvenMode : public PlayMode {
 public:
-    collection_t orderTracks(const collection_t& tracks) const override {
+    collection_t orderTracks(const collection_t& tracks) override {
         collection_t result;
 
         for(size_t i = 1; i < tracks.size(); i+=2)
