@@ -29,7 +29,7 @@ public:
     collection_t orderTracks(const collection_t& tracks) const override {
         collection_t result(tracks);
 
-        //std::shuffle(result.begin(), result.end(), random_engine);
+        std::shuffle(result.begin(), result.end(), random_engine);
 
         return result;
     }
