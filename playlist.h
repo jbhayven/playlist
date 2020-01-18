@@ -11,6 +11,7 @@
 #include <assert.h>
 #include <boost/algorithm/string.hpp>
 #include "player_exception.h"
+#include "playable_exception.h"
 #include "player_mode.h"
 #include "playable.h"
 
@@ -65,28 +66,23 @@ public:
     {}
 };
 
-/*
- * Być może warto część interfejsu przenieść do nadrzędnej klasy "Composite"
- */
-class Playlist : public Playable {
-    using playable_t = std::shared_ptr<Playable>;
-    using playlist_t = std::shared_ptr<Playlist>;
-    using playmode_t = std::shared_ptr<PlayMode>;
+class CompositePlayable : public Playable {
+protected:
+    using playable_ptr = std::shared_ptr<Playable>;
+    using composite_ptr = std::shared_ptr<CompositePlayable>;
+    using piece_ptr = std::shared_ptr<Piece>;
 
-    std::vector<playable_t> tracklist;
-    std::vector<Playlist*> child_playlists;
-    playmode_t mode;
-    std::string name;
+    std::vector<playable_ptr> child_components;
+    std::vector<CompositePlayable*> child_composites;
 
     size_t size() {
-        return tracklist.size();
+        return child_components.size();
     }
 
-    bool reachable(Playlist* looked_up) {
-        std::cout << "Lookup: " << this->name << " " << looked_up->name << std::endl;
+    bool reachable(CompositePlayable* looked_up) {
         if(this == looked_up) return true;
 
-        for(auto elem : child_playlists)
+        for(auto elem : child_composites)
             if(elem->reachable(looked_up))
                 return true;
 
@@ -94,59 +90,70 @@ class Playlist : public Playable {
     }
 
 public:
-    void add(playable_t playable, size_t position) {
+    virtual void add(piece_ptr elem, size_t position) {
         if(position > size()) throw OutOfBoundsException();
 
-        tracklist.insert(tracklist.begin() + position, playable);
+        child_components.insert(child_components.begin() + position, elem);
     }
 
-    void add(playable_t playable) {
-        add(playable, size());
+    virtual void add(piece_ptr elem) {
+        child_components.push_back(elem);
     }
 
-    void add(playlist_t playlist, size_t position) {
-        if(playlist->reachable(this)) throw LoopingPlaylistsException();
+    virtual void add(composite_ptr elem, size_t position) {
+        if(elem->reachable(this)) throw LoopingException();
+        if(position > size()) throw OutOfBoundsException();
 
-        add(playable_t(playlist), position);
-        child_playlists.push_back(playlist.get());
+        child_components.insert(child_components.begin() + position, elem);
+        child_composites.push_back(elem.get());
     }
 
-    void add(playlist_t playlist) {
-        add(playlist, size());
+    virtual void add(composite_ptr elem) {
+        if(elem->reachable(this)) throw LoopingException();
+
+        child_components.push_back(elem);
+        child_composites.push_back(elem.get());
     }
 
-    void remove() {
+    virtual void remove(size_t position) {
+        if(position >= size()) throw OutOfBoundsException();
+
+        auto it = find(child_composites.begin(), child_composites.end(),
+                       child_components[position].get());
+
+        child_components.erase(child_components.begin() + position);
+        if(it != child_composites.end()) child_composites.erase(it);
+    }
+
+    virtual void remove() {
         if(size() == 0) throw OutOfBoundsException();
 
         remove(size() - 1);
     }
+};
 
-    void remove(size_t position) {
-        if(position >= size()) throw OutOfBoundsException();
+class Playlist : public CompositePlayable {
+    using playmode_ptr = std::shared_ptr<PlayMode>;
 
-        auto it = find(child_playlists.begin(), child_playlists.end(),
-                       tracklist[position].get());
+    playmode_ptr mode;
+    std::string name;
 
-        tracklist.erase(tracklist.begin() + position);
-        if(it != child_playlists.end()) child_playlists.erase(it);
-    }
-
-    void setMode(const playmode_t& mode) {
+public:
+    void setMode(const playmode_ptr& mode) {
         this->mode = mode;
     }
 
     void play() const override {
         std::cout << "Playlist [" << name << "]" << std::endl;
 
-        std::vector<playable_t> ordered_tracks = mode->orderTracks(tracklist);
+        std::vector<playable_ptr> ordered_tracks =
+            mode->orderTracks(child_components);
 
         for(auto element : ordered_tracks)
             element->play();
     }
 
     Playlist(const std::string& name) :
-        tracklist(),
-        child_playlists(),
         mode(createSequenceMode()),
         name(name)
     {}

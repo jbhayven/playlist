@@ -8,18 +8,6 @@ public:
     virtual const char* what() const noexcept override = 0;
 };
 
-class LoopingPlaylistsException : public PlayerException {
-    const char* what() const noexcept override {
-        return "adding failed: a loop would be created";
-    }
-};
-
-class OutOfBoundsException : public PlayerException {
-    const char* what() const noexcept override {
-        return "position out of bounds";
-    }
-};
-
 class CorruptFileException : public PlayerException {
     const char* what() const noexcept override {
         return "corrupt file";
