@@ -5,22 +5,25 @@
 
 class PlayerException : public std::exception {
 public:
-    virtual const char *what() const noexcept override = 0;
+    const char *what() const noexcept override = 0;
 };
 
 class CorruptFileException : public PlayerException {
+public:
     const char *what() const noexcept override {
         return "corrupt file";
     }
 };
 
 class CorruptContentException : public PlayerException {
+public:
     const char *what() const noexcept override {
         return "corrupt content";
     }
 };
 
 class UnsupportedTypeException : public PlayerException {
+public:
     const char *what() const noexcept override {
         return "unsupported type";
     }

@@ -2,13 +2,6 @@
 #define _PLAYLIST_H
 
 #include <iostream>
-#include <vector>
-#include <string>
-#include <cstddef>
-#include <memory>
-#include <unordered_set>
-#include <utility>
-#include <assert.h>
 #include <boost/algorithm/string.hpp>
 #include "player_exception.h"
 #include "playable_exception.h"
@@ -25,7 +18,7 @@ class File {
     void censorship(const std::string &line);
 
 public:
-    File(std::string description);
+    explicit File(std::string description);
 
     const std::string &getType() const;
 
@@ -35,7 +28,8 @@ public:
 };
 
 
-class Piece : public Playable {};
+class Piece : public Playable {
+};
 
 class Song : public Piece {
     const std::string artist;
@@ -62,7 +56,7 @@ public:
     Movie(std::unordered_map<std::string, std::string> metadata,
           std::string contents)
             : title(metadata["title"]), year(metadata["year"]),
-              contents(std::move(decipher(std::move(contents)))) {}
+              contents(decipher(std::move(contents))) {}
 
     void play() const override;
 };
@@ -101,7 +95,7 @@ class Playlist : public CompositePlayable {
     std::string name;
 
 public:
-    Playlist(std::string name) :
+    explicit Playlist(std::string name) :
             mode(createSequenceMode()),
             name(std::move(name)) {}
 

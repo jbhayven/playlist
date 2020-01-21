@@ -55,15 +55,15 @@ File::File(std::string description) {
     }
 }
 
-const std::string& File::getType() const {
+const std::string &File::getType() const {
     return this->type;
 }
 
-const std::unordered_map<std::string, std::string>& File::getMetadata() const {
+const std::unordered_map<std::string, std::string> &File::getMetadata() const {
     return this->metadata;
 }
 
-const std::string& File::getContents() const {
+const std::string &File::getContents() const {
     return this->contents;
 }
 
@@ -82,13 +82,11 @@ std::string Movie::decipher(std::string line) {
             help = line[i] - 'a';
             help = (help + 13) % 26 + 'a';
             answer[i] = static_cast<char>(help);
-        }
-        else if (line[i] >= 'A' && line[i] <= 'Z') {
+        } else if (line[i] >= 'A' && line[i] <= 'Z') {
             help = line[i] - 'A';
             help = (help + 13) % 26 + 'A';
             answer[i] = static_cast<char>(help);
-        }
-        else {
+        } else {
             answer[i] = line[i];
         }
     }
@@ -198,6 +196,7 @@ std::shared_ptr<Piece> Player::openFile(const File &file) {
     return openers[file.getType()](file.getMetadata(), file.getContents());
 }
 
-std::shared_ptr<Playlist> Player::createPlaylist(const std::string &name) const {
+std::shared_ptr<Playlist>
+Player::createPlaylist(const std::string &name) const {
     return std::make_shared<Playlist>(name);
 }

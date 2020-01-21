@@ -58,5 +58,22 @@ int main() {
         std::cout << e.what() << std::endl;
     }
 
+    auto mode = createShuffleMode(1);
+    armstrong->setMode(mode);
+    mishmash->setMode(mode);
+
+    std::cout << "=== Playing 'armstrong' (shuffle mode(1))" << std::endl;
+    armstrong->play();
+    std::cout << "=== Playing 'mishmash' (shuffle mode(1), 'armstrong' shuffle mode(1))" << std::endl;
+    mishmash->play();
+    mishmash->add(armstrong, 1);
+
+    try {
+        armstrong->add(mishmash);
+    } catch (PlayerException const& e) {
+        std::cout << e.what() << std::endl;
+    }
+
+
     return 0;
 }

@@ -3,7 +3,6 @@
 
 #include <algorithm>
 #include <random>
-#include <vector>
 #include <memory>
 #include "playable.h"
 
@@ -28,9 +27,8 @@ class ShuffleMode : public PlayMode {
 public:
     collection_t orderTracks(const collection_t &tracks) override;
 
-    ShuffleMode(unsigned seed)
-        : engine(seed)
-    {}
+    explicit ShuffleMode(unsigned seed)
+            : engine(seed) {}
 };
 
 class OddEvenMode : public PlayMode {
