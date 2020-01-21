@@ -9,7 +9,8 @@
 
 class PlayMode {
 protected:
-    using collection_t = std::vector<std::shared_ptr<Playable> >;
+    using collection_t = std::vector<std::shared_ptr<Playable>>;
+
 public:
     virtual collection_t orderTracks(const collection_t &tracks) = 0;
 
@@ -18,53 +19,30 @@ public:
 
 class SequenceMode : public PlayMode {
 public:
-    collection_t orderTracks(const collection_t &tracks) override {
-        return collection_t(tracks);
-    }
+    collection_t orderTracks(const collection_t &tracks) override;
 };
 
 class ShuffleMode : public PlayMode {
     std::default_random_engine engine;
 
 public:
-    collection_t orderTracks(const collection_t &tracks) override {
-        collection_t result(tracks);
+    collection_t orderTracks(const collection_t &tracks) override;
 
-        std::shuffle(result.begin(), result.end(), engine);
-
-        return result;
-    }
-
-    ShuffleMode(unsigned seed) :
-            engine(seed) {}
+    ShuffleMode(unsigned seed)
+        : engine(seed)
+    {}
 };
 
 class OddEvenMode : public PlayMode {
 public:
-    collection_t orderTracks(const collection_t &tracks) override {
-        collection_t result;
-
-        for (size_t i = 1; i < tracks.size(); i += 2)
-            result.push_back(tracks.at(i));
-
-        for (size_t i = 0; i < tracks.size(); i += 2)
-            result.push_back(tracks.at(i));
-
-        return result;
-    }
+    collection_t orderTracks(const collection_t &tracks) override;
 };
 
 
-std::shared_ptr<PlayMode> createSequenceMode() {
-    return std::make_shared<SequenceMode>();
-}
+std::shared_ptr<PlayMode> createSequenceMode();
 
-std::shared_ptr<PlayMode> createShuffleMode(unsigned seed) {
-    return std::make_shared<ShuffleMode>(seed);
-}
+std::shared_ptr<PlayMode> createShuffleMode(unsigned seed);
 
-std::shared_ptr<PlayMode> createOddEvenMode() {
-    return std::make_shared<OddEvenMode>();
-}
+std::shared_ptr<PlayMode> createOddEvenMode();
 
 #endif
