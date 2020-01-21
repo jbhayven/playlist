@@ -1,9 +1,10 @@
 #ifndef _PLAYABLE_EXCEPTION_H
 #define _PLAYABLE_EXCEPTION_H
 
+#include  "player_exception.h"
 #include <exception>
 
-class PlayableException : public std::exception {
+class PlayableException : public PlayerException {
 };
 
 class PlayableCompositeException : public PlayableException {};
