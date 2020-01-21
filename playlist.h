@@ -13,9 +13,9 @@ class File {
     std::unordered_map<std::string, std::string> metadata;
     std::string contents;
 
-    size_t findColon(const std::string &line);
+    size_t findColon(const std::string &line) const;
 
-    void censorship(const std::string &line);
+    void censorship(const std::string &line) const;
 
 public:
     explicit File(std::string description);
@@ -25,10 +25,6 @@ public:
     const std::unordered_map<std::string, std::string> &getMetadata() const;
 
     const std::string &getContents() const;
-};
-
-
-class Piece : public Playable {
 };
 
 class Song : public Piece {
@@ -59,33 +55,6 @@ public:
               contents(decipher(std::move(contents))) {}
 
     void play() const override;
-};
-
-class CompositePlayable : public Playable {
-protected:
-    using playable_ptr = std::shared_ptr<Playable>;
-    using composite_ptr = std::shared_ptr<CompositePlayable>;
-    using piece_ptr = std::shared_ptr<Piece>;
-
-    std::vector<playable_ptr> child_components;
-    std::vector<CompositePlayable *> child_composites;
-
-    size_t size();
-
-    bool reachable(CompositePlayable *looked_up);
-
-public:
-    virtual void add(piece_ptr elem, size_t position);
-
-    virtual void add(piece_ptr elem);
-
-    virtual void add(composite_ptr elem, size_t position);
-
-    virtual void add(composite_ptr elem);
-
-    virtual void remove(size_t position);
-
-    virtual void remove();
 };
 
 class Playlist : public CompositePlayable {
