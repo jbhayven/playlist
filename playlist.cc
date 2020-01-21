@@ -1,6 +1,6 @@
 #include "playlist.h"
 
-size_t File::findColon(const std::string &line) {
+size_t File::findColon(const std::string &line) const noexcept {
     for (size_t i = 0; i < line.size(); i++) {
         if (line[i] == ':')
             return i;
@@ -8,7 +8,7 @@ size_t File::findColon(const std::string &line) {
     return line.size();
 }
 
-void File::censorship(const std::string &line) {
+void File::censorship(const std::string &line) const {
     char legalSpecial[8] = {',', '.', '!', '?', '\'', ':', ';', '-'};
     bool ok;
 
@@ -55,19 +55,19 @@ File::File(std::string description) {
     }
 }
 
-const std::string &File::getType() const {
+const std::string &File::getType() const noexcept {
     return this->type;
 }
 
-const std::unordered_map<std::string, std::string> &File::getMetadata() const {
+const std::unordered_map<std::string, std::string> &File::getMetadata() const noexcept {
     return this->metadata;
 }
 
-const std::string &File::getContents() const {
+const std::string &File::getContents() const noexcept {
     return this->contents;
 }
 
-void Song::play() const {
+void Song::play() const noexcept {
     std::cout << "Song [" << artist << ", " << title << "]: ";
     std::cout << contents << "\n";
 };
@@ -95,67 +95,12 @@ std::string Movie::decipher(std::string line) {
     return answer;
 }
 
-void Movie::play() const {
+void Movie::play() const noexcept {
     std::cout << "Movie [" << title << ", " << year << "]: ";
     std::cout << contents << "\n";
 };
 
-size_t CompositePlayable::size() {
-    return child_components.size();
-}
-
-bool CompositePlayable::reachable(CompositePlayable *looked_up) {
-    if (this == looked_up) return true;
-
-    for (auto elem : child_composites)
-        if (elem->reachable(looked_up))
-            return true;
-
-    return false;
-}
-
-void CompositePlayable::add(piece_ptr elem, size_t position) {
-    if (position > size()) throw OutOfBoundsException();
-
-    child_components.insert(child_components.begin() + position, elem);
-}
-
-void CompositePlayable::add(piece_ptr elem) {
-    child_components.push_back(elem);
-}
-
-void CompositePlayable::add(composite_ptr elem, size_t position) {
-    if (elem->reachable(this)) throw LoopingException();
-    if (position > size()) throw OutOfBoundsException();
-
-    child_components.insert(child_components.begin() + position, elem);
-    child_composites.push_back(elem.get());
-}
-
-void CompositePlayable::add(composite_ptr elem) {
-    if (elem->reachable(this)) throw LoopingException();
-
-    child_components.push_back(elem);
-    child_composites.push_back(elem.get());
-}
-
-void CompositePlayable::remove(size_t position) {
-    if (position >= size()) throw OutOfBoundsException();
-
-    auto it = find(child_composites.begin(), child_composites.end(),
-                   child_components[position].get());
-
-    child_components.erase(child_components.begin() + position);
-    if (it != child_composites.end()) child_composites.erase(it);
-}
-
-void CompositePlayable::remove() {
-    if (size() == 0) throw OutOfBoundsException();
-
-    remove(size() - 1);
-}
-
-void Playlist::setMode(const playmode_ptr &mode) {
+void Playlist::setMode(const playmode_ptr &mode) noexcept {
     this->mode = mode;
 }
 

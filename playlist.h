@@ -13,18 +13,18 @@ class File {
     std::unordered_map<std::string, std::string> metadata;
     std::string contents;
 
-    size_t findColon(const std::string &line) const;
+    size_t findColon(const std::string &line) const noexcept;
 
     void censorship(const std::string &line) const;
 
 public:
     explicit File(std::string description);
 
-    const std::string &getType() const;
+    const std::string &getType() const noexcept;
 
-    const std::unordered_map<std::string, std::string> &getMetadata() const;
+    const std::unordered_map<std::string, std::string> &getMetadata() const noexcept;
 
-    const std::string &getContents() const;
+    const std::string &getContents() const noexcept;
 };
 
 class Song : public Piece {
@@ -38,7 +38,7 @@ public:
             : artist(metadata["artist"]), title(metadata["title"]),
               contents(std::move(contents)) {}
 
-    void play() const override;
+    void play() const noexcept override;
 };
 
 class Movie : public Piece {
@@ -54,21 +54,21 @@ public:
             : title(metadata["title"]), year(metadata["year"]),
               contents(decipher(std::move(contents))) {}
 
-    void play() const override;
+    void play() const noexcept override;
 };
 
 class Playlist : public CompositePlayable {
     using playmode_ptr = std::shared_ptr<PlayMode>;
 
     playmode_ptr mode;
-    std::string name;
+    const std::string name;
 
 public:
     explicit Playlist(std::string name) :
             mode(createSequenceMode()),
             name(std::move(name)) {}
 
-    void setMode(const playmode_ptr &mode);
+    void setMode(const playmode_ptr &mode) noexcept;
 
     void play() const override;
 };
