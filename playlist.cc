@@ -59,46 +59,14 @@ const std::string &File::getType() const noexcept {
     return this->type;
 }
 
-const std::unordered_map<std::string, std::string> &File::getMetadata() const noexcept {
+const std::unordered_map<std::string, std::string> &
+File::getMetadata() const noexcept {
     return this->metadata;
 }
 
 const std::string &File::getContents() const noexcept {
     return this->contents;
 }
-
-void Song::play() const noexcept {
-    std::cout << "Song [" << artist << ", " << title << "]: ";
-    std::cout << contents << "\n";
-};
-
-std::string Movie::decipher(std::string line) {
-
-    char answer[line.size() + 1];
-    int help;
-
-    for (size_t i = 0; i < line.size(); i++) {
-        if (line[i] >= 'a' && line[i] <= 'z') {
-            help = line[i] - 'a';
-            help = (help + 13) % 26 + 'a';
-            answer[i] = static_cast<char>(help);
-        } else if (line[i] >= 'A' && line[i] <= 'Z') {
-            help = line[i] - 'A';
-            help = (help + 13) % 26 + 'A';
-            answer[i] = static_cast<char>(help);
-        } else {
-            answer[i] = line[i];
-        }
-    }
-
-    answer[line.size()] = '\0';
-    return answer;
-}
-
-void Movie::play() const noexcept {
-    std::cout << "Movie [" << title << ", " << year << "]: ";
-    std::cout << contents << "\n";
-};
 
 void Playlist::setMode(const playmode_ptr &mode) noexcept {
     this->mode = mode;
@@ -114,23 +82,16 @@ void Playlist::play() const {
         element->play();
 }
 
-static std::shared_ptr<Piece>
-openSong(std::unordered_map<std::string, std::string> metadata,
-         std::string contents) {
-    return std::make_shared<Song>(
-            Song(std::move(metadata), std::move(contents)));
-}
-
-static std::shared_ptr<Piece>
-openMovie(std::unordered_map<std::string, std::string> metadata,
-          std::string contents) {
-    return std::make_shared<Movie>(
-            Movie(std::move(metadata), std::move(contents)));
-}
-
 Player::Player() {
-    openers["audio"] = openSong;
-    openers["video"] = openMovie;
+    openers["audio"] = std::make_shared<SongOpener>();
+    openers["video"] = std::make_shared<MovieOpener>();
+}
+
+Player::Player(std::unordered_map<std::string,
+        std::shared_ptr<Opener>> otherOpeners) {
+    openers["audio"] = std::make_shared<SongOpener>();
+    openers["video"] = std::make_shared<MovieOpener>();
+    openers.merge(otherOpeners);
 }
 
 std::shared_ptr<Piece> Player::openFile(const File &file) {
@@ -138,7 +99,8 @@ std::shared_ptr<Piece> Player::openFile(const File &file) {
     if (it == openers.end())
         throw UnsupportedTypeException();
 
-    return openers[file.getType()](file.getMetadata(), file.getContents());
+    return openers[file.getType()]->open(file.getMetadata(),
+                                         file.getContents());
 }
 
 std::shared_ptr<Playlist>

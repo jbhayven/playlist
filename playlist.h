@@ -7,6 +7,7 @@
 #include "playable_exception.h"
 #include "player_mode.h"
 #include "playable.h"
+#include "opener.h"
 
 class File {
     std::string type;
@@ -22,39 +23,10 @@ public:
 
     const std::string &getType() const noexcept;
 
-    const std::unordered_map<std::string, std::string> &getMetadata() const noexcept;
+    const std::unordered_map<std::string, std::string> &
+    getMetadata() const noexcept;
 
     const std::string &getContents() const noexcept;
-};
-
-class Song : public Piece {
-    const std::string artist;
-    const std::string title;
-    const std::string contents;
-
-public:
-    Song(std::unordered_map<std::string, std::string> metadata,
-         std::string contents)
-            : artist(metadata["artist"]), title(metadata["title"]),
-              contents(std::move(contents)) {}
-
-    void play() const noexcept override;
-};
-
-class Movie : public Piece {
-    const std::string title;
-    const std::string year;
-    const std::string contents;
-
-    std::string decipher(std::string line);
-
-public:
-    Movie(std::unordered_map<std::string, std::string> metadata,
-          std::string contents)
-            : title(metadata["title"]), year(metadata["year"]),
-              contents(decipher(std::move(contents))) {}
-
-    void play() const noexcept override;
 };
 
 class Playlist : public CompositePlayable {
@@ -75,13 +47,13 @@ public:
 
 class Player {
 private:
-    typedef std::shared_ptr<Piece> (*pfunc)(
-            std::unordered_map<std::string, std::string>, std::string);
-
-    std::unordered_map<std::string, pfunc> openers;
+    std::unordered_map<std::string, std::shared_ptr<Opener>> openers;
 
 public:
     Player();
+
+    explicit Player(std::unordered_map<std::string,
+            std::shared_ptr<Opener>> otherOpeners);
 
     std::shared_ptr<Piece> openFile(const File &file);
 
