@@ -13,7 +13,7 @@ void Song::play() const noexcept {
     std::cout << contents << "\n";
 };
 
-std::string Movie::decipher(std::string line) {
+std::string Movie::decipher(std::string line) const {
     char answer[line.size() + 1];
     int help;
 
@@ -47,9 +47,9 @@ void Movie::play() const noexcept {
     std::cout << contents << "\n";
 };
 
-std::shared_ptr<Piece> SongOpener::open(
+std::shared_ptr<Piece> SongOpener::open (
         std::unordered_map<std::string, std::string> metadata,
-        std::string contents)
+        std::string contents) const
 {
     std::unordered_map<std::string, std::string>::const_iterator it;
 
@@ -62,7 +62,7 @@ std::shared_ptr<Piece> SongOpener::open(
             Song(std::move(metadata), std::move(contents)));
 }
 
-void MovieOpener::checkIsNumber(std::string line) {
+void MovieOpener::checkIsNumber(std::string line) const {
     for (char c : line) {
         if (c < '0' || c > '9')
             throw CorruptContentException();
@@ -71,7 +71,7 @@ void MovieOpener::checkIsNumber(std::string line) {
 
 std::shared_ptr<Piece> MovieOpener::open(
         std::unordered_map<std::string, std::string> metadata,
-        std::string contents)
+        std::string contents) const
 {
     std::unordered_map<std::string, std::string>::const_iterator it;
 

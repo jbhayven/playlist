@@ -21,7 +21,7 @@ class Movie : public Piece {
     const std::string year;
     const std::string contents;
 
-    std::string decipher(std::string line);
+    std::string decipher(std::string line) const;
 
 public:
     Movie(std::unordered_map<std::string, std::string> metadata,
@@ -34,24 +34,26 @@ class Opener {
 public:
     virtual std::shared_ptr<Piece>
     open(std::unordered_map<std::string, std::string> metadata,
-         std::string contents) = 0;
+         std::string contents) const = 0;
+
+    virtual ~Opener() = default;
 };
 
 class SongOpener : public Opener {
 public:
     std::shared_ptr<Piece>
     open(std::unordered_map<std::string, std::string> metadata,
-         std::string contents) override;
+         std::string contents) const override;
 };
 
 class MovieOpener : public Opener {
 private:
-    void checkIsNumber(std::string line);
+    void checkIsNumber(std::string line) const;
 
 public:
     std::shared_ptr<Piece>
     open(std::unordered_map<std::string, std::string> metadata,
-         std::string contents) override;
+         std::string contents) const override;
 };
 
 #endif
