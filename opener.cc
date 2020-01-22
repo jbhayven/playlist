@@ -1,13 +1,19 @@
 #include <iostream>
 #include "opener.h"
 
+Song::Song(std::unordered_map<std::string, std::string> metadata,
+           std::string contents)
+        : artist(metadata["artist"])
+        , title(metadata["title"])
+        , contents(std::move(contents))
+        {}
+
 void Song::play() const noexcept {
     std::cout << "Song [" << artist << ", " << title << "]: ";
     std::cout << contents << "\n";
 };
 
 std::string Movie::decipher(std::string line) {
-
     char answer[line.size() + 1];
     int help;
 
@@ -29,21 +35,52 @@ std::string Movie::decipher(std::string line) {
     return answer;
 }
 
+Movie::Movie(std::unordered_map<std::string, std::string> metadata,
+             std::string contents)
+        : title(metadata["title"])
+        , year(metadata["year"])
+        , contents(decipher(std::move(contents)))
+        {}
+
 void Movie::play() const noexcept {
     std::cout << "Movie [" << title << ", " << year << "]: ";
     std::cout << contents << "\n";
 };
 
-std::shared_ptr<Piece>
-SongOpener::open(std::unordered_map<std::string, std::string> metadata,
-                 std::string contents) {
+std::shared_ptr<Piece> SongOpener::open(
+        std::unordered_map<std::string, std::string> metadata,
+        std::string contents)
+{
+    std::unordered_map<std::string, std::string>::const_iterator it;
+
+    if (metadata.find("artist") == metadata.end())
+        throw CorruptFileException();
+    if (metadata.find("title") == metadata.end())
+        throw CorruptFileException();
+
     return std::make_shared<Song>(
             Song(std::move(metadata), std::move(contents)));
 }
 
-std::shared_ptr<Piece>
-MovieOpener::open(std::unordered_map<std::string, std::string> metadata,
-                  std::string contents) {
+void MovieOpener::checkIsNumber(std::string line) {
+    for (char c : line) {
+        if (c < '0' || c > '9')
+            throw CorruptContentException();
+    }
+}
+
+std::shared_ptr<Piece> MovieOpener::open(
+        std::unordered_map<std::string, std::string> metadata,
+        std::string contents)
+{
+    std::unordered_map<std::string, std::string>::const_iterator it;
+
+    if (metadata.find("title") == metadata.end())
+        throw CorruptFileException();
+    if (metadata.find("year") == metadata.end())
+        throw CorruptFileException();
+    checkIsNumber(metadata["year"]);
+
     return std::make_shared<Movie>(
             Movie(std::move(metadata), std::move(contents)));
 }

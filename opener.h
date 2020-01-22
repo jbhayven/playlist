@@ -11,9 +11,7 @@ class Song : public Piece {
 
 public:
     Song(std::unordered_map<std::string, std::string> metadata,
-         std::string contents)
-            : artist(metadata["artist"]), title(metadata["title"]),
-              contents(std::move(contents)) {}
+         std::string contents);
 
     void play() const noexcept override;
 };
@@ -27,9 +25,7 @@ class Movie : public Piece {
 
 public:
     Movie(std::unordered_map<std::string, std::string> metadata,
-          std::string contents)
-            : title(metadata["title"]), year(metadata["year"]),
-              contents(decipher(std::move(contents))) {}
+          std::string contents);
 
     void play() const noexcept override;
 };
@@ -49,6 +45,9 @@ public:
 };
 
 class MovieOpener : public Opener {
+private:
+    void checkIsNumber(std::string line);
+
 public:
     std::shared_ptr<Piece>
     open(std::unordered_map<std::string, std::string> metadata,

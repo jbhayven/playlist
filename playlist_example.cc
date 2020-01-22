@@ -130,5 +130,13 @@ int main() {
         std::cout << e.what() << std::endl;
     }
 
+    try {
+        auto newVideo = player.openFile(File("video|year:1023|Qvfcynlvat Pnonerg"));
+        armstrong->add(newVideo);
+        armstrong->play();
+    } catch (PlayerException const &e) {
+        std::cout << e.what() << std::endl;
+    }
+
 
 }
